@@ -1,25 +1,10 @@
 from typing import List, Dict
 from flask import Flask, request
-import mysql.connector
 import json
 import sys
+from dbutils import DbUtils
 
 app = Flask(__name__)
-config = {
-    'user': 'root',
-    'password': 'root',
-    'host': 'db',
-    'port': '3306',
-    'database': 'elibrary'
-}
-# config = {
-#     'user': 'root',
-#     'password': 'root',
-#     'host': 'localhost',
-#     'port': '3306',
-#     'database': 'elibrary',
-#     'auth_plugin': 'mysql_native_password'
-# }
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -60,26 +45,13 @@ def api_filter():
     print('SQL:' + query);
     print(json.dumps(dbfilter))
 
-    connection = mysql.connector.connect(**config)
-    cursor = connection.cursor(buffered=True, dictionary=True)
-    cursor.execute(query, dbfilter)
-    rows = cursor.fetchall()
-    results = []
-    for r in rows:
-        results.append(r)
-
-    cursor.close()
-    connection.close()
+    results = DbUtils().query(query, dbfilter)
+    
     return json.dumps(results)
     
 def getBooks():
-    
-    connection = mysql.connector.connect(**config)
-    cursor = connection.cursor()
-    cursor.execute('SELECT id,author,title,published FROM books')
-    results = [x for x in cursor]
-    cursor.close()
-    connection.close()
+    sql = "SELECT id,author,title,published FROM books";
+    results = DbUtils().query(sql)
 
     return results
 
