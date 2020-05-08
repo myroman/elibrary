@@ -2,7 +2,7 @@ from typing import List, Dict
 from flask import Flask, request
 import json
 import sys
-from dbutils import DbUtils
+from common.dbutils import DbUtils
 
 app = Flask(__name__)
 
@@ -24,7 +24,7 @@ def api_filter():
     author = queryParams.get('author')
     title = queryParams.get('title')
 
-    if not (id or published or author):
+    if not (id or published or author or title):
         return page_not_found(404)
 
     query = "SELECT id,author,title,published FROM books WHERE"
@@ -39,6 +39,9 @@ def api_filter():
     if author:
         query += " author = %s AND"
         dbfilter.append(author)    
+    if title:
+        query += " title = %s AND"
+        dbfilter.append(title)    
 
     query = query[:-4] + ';'
 
@@ -58,4 +61,4 @@ def getBooks():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0',port=5002)

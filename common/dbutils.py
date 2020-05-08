@@ -20,7 +20,7 @@ class DbUtils(object):
         }
 
 
-
+    # for selects
     def query(self, sql, dbfilter = None):
         connection = mysql.connector.connect(**self.config)
         cursor = connection.cursor(buffered=True, dictionary=True)
@@ -32,3 +32,13 @@ class DbUtils(object):
         cursor.close()
         connection.close()
         return rows
+
+    # for inserts, updates, deletes
+    def execute(self, sql, data):
+        connection = mysql.connector.connect(**self.config)
+        cursor = connection.cursor()
+        cursor.execute(sql, data)
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return cursor.lastrowid
