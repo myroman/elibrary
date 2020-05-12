@@ -1,19 +1,30 @@
 from typing import List, Dict
-from flask import Flask, request
+from flask import Flask, request,jsonify
 import json
 import sys
-from common.dbutils import DbUtils
+from dbutils import DbUtils
 import requests
 
 app = Flask(__name__)
 
+@app.route('/api/hello')
+def hello():
+    return jsonify({"message": "Hi there!"})
+
 @app.route('/api/v1/all-users')
 def getAllUsers():
-    return json.dumps(getUsers())
+    return jsonify(getUsers())
+@app.route('/api/v1/users/<username>/books', methods=['GET'])
+def getAssignedBooks(username):
+    if username is None:
+        return None
+    result = fetchJsonFromUrl('http://users:5001/api/v1/users/'+username+'/books')
+    return jsonify(result)
+
 def getUsers():
-    print('Requesting users')
-    jsonObj = fetchJsonFromUrl('http://127.0.0.1:5001/api/v1/users/all')
-    return jsonObj
+    url = 'http://users:5001/api/v1/users/all'
+    print('Requesting users from '+ url)
+    return fetchJsonFromUrl(url)
 
 def fetchJsonFromUrl(url):
     print("fetching from " + url)
@@ -48,13 +59,13 @@ def checkoutBook():
 
     #check if user exists
     username = request.json['username']
-    userResponse = fetchJsonFromUrl('http://127.0.0.1:5001/api/v1/users?username='+username)
+    userResponse = fetchJsonFromUrl('http://users:5001/api/v1/users?username='+username)
     if userResponse is None or len(userResponse) == 0:
         return 'No such username'
     
     #check if book title exists in db. get book id.
     booktitle = request.json['booktitle']
-    bookResponse = fetchJsonFromUrl('http://127.0.0.1:5002/api/v1/resources/books?title='+booktitle)
+    bookResponse = fetchJsonFromUrl('http://books:5002/api/v1/resources/books?title='+booktitle)
     if bookResponse is None or len(bookResponse) == 0:
         return 'No such book'
 
@@ -64,14 +75,14 @@ def checkoutBook():
         'bookId': bookId,
         'username': userResponse[0]['username']
     }
-    assignedResp = postJsonToUrl('http://127.0.0.1:5001/api/v1/userbook', userbookMapping)
+    assignedResp = postJsonToUrl('http://users:5001/api/v1/userbook', userbookMapping)
     if assignedResp is None:
         return "Book {} was not assigned to {}".format(booktitle, username)
 
-    return json.dumps({
+    return jsonify({
         'message': "Book {} was assigned to {}".format(booktitle, username),
         'data': assignedResp
     })
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0',port='5000')

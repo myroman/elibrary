@@ -1,8 +1,8 @@
 from typing import List, Dict
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
 import sys
-from common.dbutils import DbUtils
+from dbutils import DbUtils
 
 app = Flask(__name__)
 
@@ -12,7 +12,7 @@ def page_not_found(e):
 
 @app.route('/api/v1/resources/books/all')
 def index() -> str:
-    return json.dumps({'books': getBooks()})
+    return jsonify({'books': getBooks()})
 
 @app.route('/api/v1/resources/books', methods=['GET'])
 def api_filter():
@@ -46,11 +46,11 @@ def api_filter():
     query = query[:-4] + ';'
 
     print('SQL:' + query);
-    print(json.dumps(dbfilter))
+    print(jsonify(dbfilter))
 
     results = DbUtils().query(query, dbfilter)
     
-    return json.dumps(results)
+    return jsonify(results)
     
 def getBooks():
     sql = "SELECT id,author,title,published FROM books";

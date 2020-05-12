@@ -1,14 +1,14 @@
 from typing import List, Dict
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
 import sys
-from common.dbutils import DbUtils
+from dbutils import DbUtils
 
 app = Flask(__name__)
 
 @app.route('/api/v1/users/all')
 def getAllUsers():
-    return json.dumps({'data': getUsers()})
+    return jsonify({'data': getUsers()})
 
 def getUsers():
     sql = "SELECT username,firstname,lastname from `users`;";
@@ -39,7 +39,7 @@ def searchUsers():
 
     results = DbUtils().query(query, dbfilter)
     
-    return json.dumps(results)
+    return jsonify(results)
 
 @app.route("/api/v1/userbook", methods = ['POST'])
 def assignUserToBook():
@@ -65,7 +65,25 @@ def assignUserToBook():
     print("Assigning bookId {} to {}...".format(request.json['bookId'], request.json['username']))
     id = DbUtils().execute(sql, (request.json['username'], request.json['bookId']))
     print("Inserted id",id)
-    return json.dumps({'id': id})
+    return jsonify({'id': id})
+
+@app.route('/api/v1/users/<username>/books', methods=['GET'])
+def getAssignedBooks(username):
+    if username is None:
+        return None
+    query = """SELECT us.username,us.firstname,us.lastname,b.id,b.title,b.author
+FROM users us
+join userbooks ub on ub.username = us.username
+join books b on b.id = ub.bookid
+where us.username = %s;"""
+    dbfilter = []
+    dbfilter.append(username)
+
+    print('SQL:' + query);
+    print(json.dumps(dbfilter))
+
+    results = DbUtils().query(query, dbfilter)
+    return jsonify(results)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port='5001')

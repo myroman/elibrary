@@ -1,12 +1,28 @@
 version: "2"
 services:
-  app:
-    build: ./app
+  elibrary:
+    build: ./elibrary
     container_name: elibrary
     links:
       - db
     ports:
       - "5000:5000"
+
+  users:
+    build: ./users
+    container_name: users
+    links:
+      - db
+    ports:
+      - "5001:5001"  
+
+  books:
+    build: ./books
+    container_name: books
+    links:
+      - db
+    ports:
+      - "5002:5002"  
 
   db:
     image: mysql:5.7
